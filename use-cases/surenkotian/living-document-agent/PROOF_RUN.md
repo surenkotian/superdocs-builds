@@ -1,4 +1,4 @@
-# Proof run — real terminal output, real API, real account
+# Proof run, real terminal output, real API, real account
 
 Account created via `POST /v1/agents/signup` (self-signup flow documented at docs.superdocs.app), free tier, 500 ops/month. Every call below is real; nothing in this file is a description of expected behavior.
 
@@ -60,7 +60,7 @@ $ curl -s https://api.superdocs.app/v1/agents/whoami -H "Authorization: Bearer $
 "used":6
 ```
 
-The agent's own edit in step 2 changed the document. Re-running against the *same source* immediately afterward did not treat that change as new work — because the stopping condition is keyed to the external source hash, never to the document's own state. `used` is bit-for-bit identical before and after.
+The agent's own edit in step 2 changed the document. Re-running against the *same source* immediately afterward did not treat that change as new work, because the stopping condition is keyed to the external source hash, never to the document's own state. `used` is bit-for-bit identical before and after.
 
 ## 4. Second real update (recovery)
 
@@ -91,7 +91,7 @@ $ curl -s .../whoami | grep used
 "used":7
 ```
 
-## 6. `agent_state.json` run_history — a readable history, not churn
+## 6. `agent_state.json` run_history, a readable history, not churn
 
 ```json
 [
@@ -102,7 +102,7 @@ $ curl -s .../whoami | grep used
 ]
 ```
 
-Four entries for four runs against three distinct source states plus one repeat — not four full-document rewrites.
+Four entries for four runs against three distinct source states plus one repeat, not four full-document rewrites.
 
 ## The bug this proof run actually caught
 
@@ -113,4 +113,4 @@ The *first* attempt at step 2 (against a document created before the table/parag
 <p data-chunk-id="78c828e9-...">Last synced: 2026-08-01T09:00:00Z</p>
 ```
 
-Two "Last synced" lines. The new one has **no `data-chunk-id` at all** — it was inserted as fresh content, not an edit to the existing paragraph, which the old one still was. The boundary-diff code itself also had a bug at this point (it only checked chunks present in both before/after snapshots, so an *added* chunk outside the section didn't register as a detected change in the log message, even though the raw equality check correctly still failed the run). Both are fixed in the shipped version — the table now carries its own timestamp as a spanning row, and the diff check now reports added/removed/changed separately. Re-run afterward (step 2 above) is the fixed, clean result.
+Two "Last synced" lines. The new one has **no `data-chunk-id` at all**, it was inserted as fresh content, not an edit to the existing paragraph, which the old one still was. The boundary-diff code itself also had a bug at this point (it only checked chunks present in both before/after snapshots, so an *added* chunk outside the section didn't register as a detected change in the log message, even though the raw equality check correctly still failed the run). Both are fixed in the shipped version. The table now carries its own timestamp as a spanning row, and the diff check now reports added/removed/changed separately. Re-run afterward (step 2 above) is the fixed, clean result.
